@@ -2,10 +2,10 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from src.utils.settings import settings
-from src.user.models import UserModel
-from src.tasks.models import TaskModel
-from src.utils.db import Base
+from app.core.config import settings
+from app.models.user import UserModel
+from app.models.task import TaskModel
+from app.core.database import Base
 from alembic import context
 
 # this is the Alembic Config object, which provides

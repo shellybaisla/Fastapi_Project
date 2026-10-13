@@ -1,12 +1,13 @@
 from fastapi import HTTPException,status,Request,Depends
 from fastapi.security import APIKeyHeader
-from src.user.dtos import UserSchema,LoginSchema
+from app.schemas.user import UserSchema,LoginSchema
 from sqlalchemy.orm import Session
-from src.user.models import UserModel
-from src.utils.settings import settings
+from app.models.user import UserModel
+from app.core.config import settings
 from datetime import datetime,timedelta
 from pwdlib import PasswordHash
-from src.utils.db import get_db
+from app.core.database import get_db
+
 
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -66,27 +67,59 @@ api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
 api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
-def is_authenticated(request:Request,token: str = Depends(api_key_header),db:Session = Depends(get_db)):
+def is_authenticated(
+    request: Request,
+    token: str = Depends(api_key_header),
+    db: Session = Depends(get_db),
+):
     try:
         token = request.headers.get("authorization")
         if not token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token are unauthorized")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token are unauthorized",
+            )
 
         token = token.split(" ")[-1]
 
         data = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = data.get("id")
-        # exp_time = int(data.get("exp"))
-        # current_time = datetime.now().timestamp()
-
-        # if current_time > exp_time:
-        #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you are unauthorized")
 
         user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="user are unauthorized")
-
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="user are unauthorized",
+            )
 
         return user
     except InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token are unauthorized")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token are unauthorized",
+        )
+
+# def is_authenticated(request:Request,token: str = Depends(api_key_header),db:Session = Depends(get_db)):
+#     try:
+#         token = request.headers.get("authorization")
+#         if not token:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token are unauthorized")
+
+#         token = token.split(" ")[-1]
+
+#         data = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+#         user_id = data.get("id")
+#         # exp_time = int(data.get("exp"))
+#         # current_time = datetime.now().timestamp()
+
+#         # if current_time > exp_time:
+#         #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="you are unauthorized")
+
+#         user = db.query(UserModel).filter(UserModel.id == user_id).first()
+#         if not user:
+#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="user are unauthorized")
+
+
+#         return user
+#     except InvalidTokenError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token are unauthorized")

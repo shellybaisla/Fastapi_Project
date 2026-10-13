@@ -1,8 +1,8 @@
-from src.tasks.dtos import TaskSchema
+from app.schemas.task import TaskSchema
 from sqlalchemy.orm import Session
-from src.tasks.models import TaskModel
+from app.models.task import TaskModel
 from fastapi import HTTPException
-from src.user.models import UserModel
+from app.models.user import UserModel
 
 
 def create_tasks(body:TaskSchema,db:Session,user:UserModel):
@@ -22,13 +22,22 @@ def get_tasks(db:Session,user:UserModel):
     tasks = db.query(TaskModel).filter(TaskModel.user_id == user.id).all()
     return tasks
 
-def get_one_task(task_id: int,db:Session):
-    one_task = db.query(TaskModel).get(task_id)
-    if not one_task:
-        raise HTTPException(404,detail="Task ID is Incorrect")
+def get_one_task(task_id: int, db: Session, user: UserModel):
+    task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.user_id == user.id,
+    ).first()
+    if not task:
+        raise HTTPException(404, detail="Task not found")
+    return task
+
+# def get_one_task(task_id: int,db:Session):
+#     one_task = db.query(TaskModel).get(task_id)
+#     if not one_task:
+#         raise HTTPException(404,detail="Task ID is Incorrect")
     
-    # return {"status": "Task Fetched Successfully","data":one_task}
-    return one_task
+#     # return {"status": "Task Fetched Successfully","data":one_task}
+#     return one_task
 
 def update_task(body:TaskSchema,task_id:int,db:Session,user:UserModel):
     one_task:TaskModel = db.query(TaskModel).get(task_id)
